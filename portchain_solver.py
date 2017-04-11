@@ -4,7 +4,7 @@
 '''
 Paint shop coding exercise:
 
-Required lib: numpy
+Required libs: numpy, pandas
 
 Usage:
     $ chmod +x portchain_solver.py
