@@ -66,6 +66,9 @@ def get_matrix(nb_colors, requests):
 # Heuristics
 
 def locs_for_unique_requests(colors, matte):
+    '''
+    Find locations of clients ordering a single color/sheen (must be respected)
+    '''
     colors_rows = colors[colors.sum(axis=1) == 1]
     colors_target = colors_rows.loc[:, colors_rows.sum(axis=0) > 0]
     if colors_target.size == 0:
@@ -85,6 +88,9 @@ def locs_for_unique_requests(colors, matte):
 
 
 def locs_for_glossy(colors, matte):
+    '''
+    Find locations of clients ordering glossy colors (cheaper than matte)
+    '''
     colors_target = matte[colors == 1].dropna(axis=1)
     if colors_target.size == 0:
         return False, False
@@ -94,6 +100,9 @@ def locs_for_glossy(colors, matte):
 
 
 def locs_for_remaining(colors, matte):
+    '''
+    Find locations of remaining clients (ordering matte colors)
+    '''
     colors_target = matte[colors == 1]
     if colors_target.size == 0:
         return False, False
