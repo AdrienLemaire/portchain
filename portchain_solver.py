@@ -4,7 +4,7 @@
 '''
 Paint shop coding exercise:
 
-Required libs: numpy, pandas
+Required lib: numpy, pandas
 
 Usage:
     $ chmod +x portchain_solver.py
@@ -66,9 +66,6 @@ def get_matrix(nb_colors, requests):
 # Heuristics
 
 def locs_for_unique_requests(colors, matte):
-    '''
-    Find locations of clients ordering a single color/sheen (must be respected)
-    '''
     colors_rows = colors[colors.sum(axis=1) == 1]
     colors_target = colors_rows.loc[:, colors_rows.sum(axis=0) > 0]
     if colors_target.size == 0:
@@ -88,10 +85,7 @@ def locs_for_unique_requests(colors, matte):
 
 
 def locs_for_glossy(colors, matte):
-    '''
-    Find locations of clients ordering glossy colors (cheaper than matte)
-    '''
-    colors_target = matte[colors == 1].dropna(axis=1)
+    colors_target = matte[matte==0][colors == 1]
     if colors_target.size == 0:
         return False, False
 
@@ -100,9 +94,6 @@ def locs_for_glossy(colors, matte):
 
 
 def locs_for_remaining(colors, matte):
-    '''
-    Find locations of remaining clients (ordering matte colors)
-    '''
     colors_target = matte[colors == 1]
     if colors_target.size == 0:
         return False, False
@@ -131,14 +122,14 @@ def get_batch(nb_colors, requests):
     sheen_chosen = np.zeros(nb_colors)
     client_satisfied = np.zeros(len(matte))
 
-    def compute_iter(f):
+    def compute_iter(f, prev_target=pd.DataFrame()):
         # reduce data matrix to unsatisfied clients and unchosen sheen colors
         colors_reduced = colors.iloc[client_satisfied == 0, sheen_chosen == 0]
         matte_reduced = matte.iloc[client_satisfied == 0, sheen_chosen == 0]
 
         # Find targets and locations
         colors_target, locs = f(colors_reduced, matte_reduced)
-        if colors_target is False:
+        if colors_target is False or colors_target.equals(prev_target):
             return
 
         for x, y in zip(*[l.tolist() for l in locs]):
@@ -154,7 +145,7 @@ def get_batch(nb_colors, requests):
             mask = (colors[col] == 1) & (matte[col] == sheen)
             for row in colors[mask].index:
                 client_satisfied[row] = 1
-        compute_iter(f)
+        compute_iter(f, colors_target)
 
     # Compute solution
     for f in [locs_for_unique_requests, locs_for_glossy, locs_for_remaining]:
